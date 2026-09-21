@@ -7,104 +7,164 @@ import streamlit as st
 from transformers import pipeline
 
 # ==========================================
-# 1. STREAMLIT KONFIGURATION & CUSTOM CSS
+# 1. STREAMLIT KONFIGURATION
 # ==========================================
 st.set_page_config(
     page_title="Fundbüro - Katharineum zu Lübeck",
     page_icon="🏫",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-st.markdown("""
+# ==========================================
+# 2. SESSION STATE & DESIGNS / THEMES
+# ==========================================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "active_view" not in st.session_state:
+    st.session_state.active_view = "dashboard"
+if "action_type" not in st.session_state:
+    st.session_state.action_type = "Gefunden"
+if "theme" not in st.session_state:
+    st.session_state.theme = "Katharineum Navy"
+
+# Farb-Themes Definition
+THEMES = {
+    "Katharineum Navy": {
+        "primary": "#1E3A8A",
+        "primary_hover": "#1D4ED8",
+        "bg": "#F8FAFC",
+        "card_bg": "#FFFFFF",
+        "text": "#0F172A",
+        "subtext": "#64748B",
+        "border": "#E2E8F0"
+    },
+    "Dark Mode": {
+        "primary": "#3B82F6",
+        "primary_hover": "#60A5FA",
+        "bg": "#0F172A",
+        "card_bg": "#1E293B",
+        "text": "#F8FAFC",
+        "subtext": "#94A3B8",
+        "border": "#334155"
+    },
+    "Smaragd Grün": {
+        "primary": "#059669",
+        "primary_hover": "#10B981",
+        "bg": "#F0FDF4",
+        "card_bg": "#FFFFFF",
+        "text": "#064E3B",
+        "subtext": "#047857",
+        "border": "#BBF7D0"
+    },
+    "Warmes Orange": {
+        "primary": "#EA580C",
+        "primary_hover": "#F97316",
+        "bg": "#FFF7ED",
+        "card_bg": "#FFFFFF",
+        "text": "#431407",
+        "subtext": "#C2410C",
+        "border": "#FFEDD5"
+    }
+}
+
+current_theme = THEMES[st.session_state.theme]
+
+# Dynamic CSS Injection
+st.markdown(f"""
 <style>
-    :root {
-        --primary-navy: #1E3A8A;
-        --secondary-slate: #475569;
-        --bg-soft-grey: #F8FAFC;
-        --card-bg: #FFFFFF;
-        --accent-blue: #3B82F6;
-    }
-
-    .stApp {
-        background-color: var(--bg-soft-grey);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    .brand-header {
-        background-color: var(--primary-navy);
-        color: white;
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
+    .stApp {{
+        background-color: {current_theme['bg']};
+        color: {current_theme['text']};
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }}
+    
+    /* Header Bar */
+    .app-header {{
+        background: {current_theme['card_bg']};
+        border-bottom: 2px solid {current_theme['border']};
+        padding: 16px 24px;
+        border-radius: 16px;
         margin-bottom: 24px;
-        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
-    }
-    .brand-header h1 {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }}
+    .app-header h1 {{
         margin: 0;
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #FFFFFF !important;
-    }
-    .brand-header p {
-        margin: 4px 0 0 0;
-        font-size: 0.85rem;
-        color: #93C5FD;
+        font-size: 1.5rem;
+        color: {current_theme['primary']} !important;
+        font-weight: 800;
+    }}
+    .app-header p {{
+        margin: 0;
+        font-size: 0.8rem;
+        color: {current_theme['subtext']};
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-    }
+        letter-spacing: 1px;
+    }}
 
-    .item-card {
-        background-color: var(--card-bg);
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .badge-found {
-        background-color: #DEF7EC;
-        color: #03543F;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    .badge-lost {
-        background-color: #FDE8E8;
-        color: #9B1C1C;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    .badge-resolved {
-        background-color: #E0E7FF;
-        color: #3730A3;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    div.stButton > button[kind="primary"] {
-        background-color: var(--primary-navy);
+    /* Action Banner */
+    .hero-banner {{
+        background: linear-gradient(135deg, {current_theme['primary']}, {current_theme['primary_hover']});
         color: white;
-    }
+        padding: 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }}
 
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    /* Item Card Grid */
+    .grid-card {{
+        background-color: {current_theme['card_bg']};
+        border: 1px solid {current_theme['border']};
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }}
+    .grid-card:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    }}
+    .card-title {{
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: {current_theme['text']};
+        margin-bottom: 8px;
+    }}
+    .card-meta {{
+        font-size: 0.85rem;
+        color: {current_theme['subtext']};
+        line-height: 1.5;
+    }}
+
+    /* Badges */
+    .status-badge {{
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }}
+    .badge-found {{ background-color: #D1FAE5; color: #065F46; }}
+    .badge-lost {{ background-color: #FEE2E2; color: #991B1B; }}
+    .badge-resolved {{ background-color: #E0E7FF; color: #3730A3; }}
+
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
 </style>
 """, unsafe_allow_html=True)
 
 
 # ==========================================
-# 2. DATENBANK LOGIK & MIGRATION
+# 3. DATENBANK LOGIK
 # ==========================================
 DB_FILE = "fundbuero.db"
 
 def init_db():
-    """Initialisiert die SQLite-Datenbank und führt Migrationen durch."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
@@ -122,13 +182,10 @@ def init_db():
             finder_name TEXT
         )
     ''')
-    
-    # Automatische Spalten-Migration für bestehende Datenbanken
     c.execute("PRAGMA table_info(items)")
     columns = [col[1] for col in c.fetchall()]
     if "finder_name" not in columns:
         c.execute("ALTER TABLE items ADD COLUMN finder_name TEXT")
-        
     conn.commit()
     conn.close()
 
@@ -154,7 +211,6 @@ def mark_as_found(item_id, finder_name):
     conn.close()
 
 def get_items(filter_type=None, category=None, search_query=None):
-    """Lädt Einträge aus der Datenbank unter Berücksichtigung von Typ, Kategorie und Suchbegriffen."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     query = "SELECT * FROM items WHERE 1=1"
@@ -167,7 +223,6 @@ def get_items(filter_type=None, category=None, search_query=None):
         query += " AND category = ?"
         params.append(category)
         
-    # Schlagwortsuche (sucht in Titel, Beschreibung, Ort und Name)
     if search_query:
         query += " AND (title LIKE ? OR description LIKE ? OR location LIKE ? OR user_name LIKE ?)"
         wildcard_query = f"%{search_query}%"
@@ -183,25 +238,22 @@ init_db()
 
 
 # ==========================================
-# 3. HUGGING FACE KI INFERENZ & TRANSLATOR
+# 4. HUGGING FACE KI INFERENZ
 # ==========================================
 LABELS = ["Bekleidung/Jacke", "Elektronik/Handy", "Schlüssel", "Rucksack/Tasche", "Mäppchen/Stifte", "Sonstiges"]
 
 @st.cache_resource
 def load_hf_model():
-    """Lädt ein vortrainiertes Hugging Face Bildklassifikations-Modell."""
     try:
         classifier = pipeline("image-classification", model="google/vit-base-patch16-224")
         return classifier
     except Exception as e:
-        st.warning(f"Hugging Face Modell konnte nicht geladen werden: {e}")
+        st.warning(f"KI-Modell konnte nicht geladen werden: {e}")
         return None
 
 def map_hf_to_school_category(hf_label: str):
-    """Mappt englische Hugging Face Labels auf deutsche Schulkategorien + deutsche Bezeichnung."""
     label = hf_label.lower()
-    
-    if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "clothing", "hoodie", "cardigan", "jean", "jersey"]):
+    if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "clothing", "hoodie", "cardigan", "jean"]):
         return "Bekleidung/Jacke", "Kleidungsstück / Jacke"
     elif any(w in label for w in ["cellular telephone", "mobile phone", "cellphone"]):
         return "Elektronik/Handy", "Smartphone / Handy"
@@ -211,11 +263,11 @@ def map_hf_to_school_category(hf_label: str):
         return "Elektronik/Handy", "Tablet"
     elif any(w in label for w in ["key", "keychain"]):
         return "Schlüssel", "Schlüssel"
-    elif any(w in label for w in ["backpack", "bag", "handbag", "suitcase", "pouch", "school bag", "knapsack"]):
+    elif any(w in label for w in ["backpack", "bag", "handbag", "suitcase", "pouch", "school bag"]):
         return "Rucksack/Tasche", "Rucksack / Tasche"
     elif any(w in label for w in ["pencil", "pen", "pencil box", "pencil case", "eraser", "ballpoint"]):
         return "Mäppchen/Stifte", "Mäppchen / Stift"
-    elif "water bottle" in label or "flask" in label or "pop bottle" in label:
+    elif "water bottle" in label or "flask" in label:
         return "Sonstiges", "Trinkflasche"
     elif "umbrella" in label:
         return "Sonstiges", "Regenschirm"
@@ -226,56 +278,65 @@ def map_hf_to_school_category(hf_label: str):
 
 def predict_category(image: Image.Image):
     classifier = load_hf_model()
-    
     if classifier is not None:
         try:
             results = classifier(image)
             top_prediction = results[0]
-            
             raw_label = top_prediction['label']
             confidence = float(top_prediction['score'])
-            
             mapped_category, german_label = map_hf_to_school_category(raw_label)
             return mapped_category, confidence, german_label
         except Exception:
             pass
-
     return "Sonstiges", 0.75, "Gegenstand"
 
 
 # ==========================================
-# 4. SESSION STATE & NAVIGATION
+# 5. HEADER COMPONENT (MIT SETTINGS DROPDOWN)
 # ==========================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "username" not in st.session_state:
-    st.session_state.username = ""
-if "active_view" not in st.session_state:
-    st.session_state.active_view = "dashboard"
-if "action_type" not in st.session_state:
-    st.session_state.action_type = "Gefunden"
-
-
-# ==========================================
-# 5. UI COMPONENTS & VIEWS
-# ==========================================
-
 def render_header():
-    st.markdown("""
-    <div class="brand-header">
-        <p>Katharineum zu Lübeck</p>
-        <h1>DIGITALES FUNDBÜRO</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    col_title, col_settings = st.columns([4, 1])
+    
+    with col_title:
+        st.markdown("""
+        <div class="app-header">
+            <p>Katharineum zu Lübeck</p>
+            <h1>Campus Fundbüro</h1>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_settings:
+        with st.popover("⚙️ Einstellungen"):
+            st.markdown("### Farbschema wählen")
+            selected_theme = st.selectbox(
+                "Design Anpassen",
+                list(THEMES.keys()),
+                index=list(THEMES.keys()).index(st.session_state.theme)
+            )
+            if selected_theme != st.session_state.theme:
+                st.session_state.theme = selected_theme
+                st.rerun()
 
-# --- LOGIN SCREEN ---
+            if st.session_state.logged_in:
+                st.markdown("---")
+                if st.button("🚪 Abmelden", use_container_width=True):
+                    st.session_state.logged_in = False
+                    st.rerun()
+
+
+# ==========================================
+# 6. VIEWS
+# ==========================================
+
 def view_login():
     render_header()
-    col1, col2, col3 = st.columns([1, 8, 1])
-    with col2:
-        st.markdown("<h3 style='text-align: center; color: #475569;'>Anmeldung</h3>", unsafe_allow_html=True)
+    
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.markdown("<div class='grid-card'>", unsafe_allow_html=True)
+        st.subheader("Anmeldung")
         with st.form("login_form"):
-            user_input = st.text_input("Anmeldename", placeholder="z. B. s.müller")
+            user_input = st.text_input("Nutzername", placeholder="z. B. max.mustermann")
             password_input = st.text_input("Passwort", type="password", placeholder="••••••••")
             submit = st.form_submit_button("Anmelden", use_container_width=True, type="primary")
             if submit:
@@ -284,127 +345,112 @@ def view_login():
                     st.session_state.username = user_input
                     st.rerun()
                 else:
-                    st.error("Bitte gib Anmeldename und Passwort ein.")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.caption("[Anmeldename vergessen?](#)")
-        with c2:
-            st.caption("[Passwort vergessen?](#)")
+                    st.error("Bitte Benutzername und Passwort eingeben.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# --- DASHBOARD ---
 def view_dashboard():
     render_header()
     
-    col_user, col_logout = st.columns([3, 1])
-    with col_user:
-        st.write(f"Angemeldet als: **{st.session_state.username}**")
-    with col_logout:
-        if st.button("Abmelden", key="logout_btn"):
-            st.session_state.logged_in = False
-            st.rerun()
+    # Hero / Aktionsbereich
+    st.markdown(f"""
+    <div class="hero-banner">
+        <h2>Hallo, {st.session_state.username}! 👋</h2>
+        <p>Hast du etwas verloren oder einen Gegenstand auf dem Schulgelände gefunden?</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    col_lost, col_found = st.columns(2)
-    with col_lost:
-        if st.button("🔴 Anfrage: Ich habe etwas VERLOREN", use_container_width=True):
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🔴 Etwas VERLOREN melden", use_container_width=True):
             st.session_state.action_type = "Verloren"
             st.session_state.active_view = "add_item"
             st.rerun()
-            
-    with col_found:
-        if st.button("📷 Ich habe etwas GEFUNDEN", use_container_width=True, type="primary"):
+    with col_btn2:
+        if st.button("📷 Etwas GEFUNDEN melden", use_container_width=True, type="primary"):
             st.session_state.action_type = "Gefunden"
             st.session_state.active_view = "add_item"
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Übersicht & Suche")
-    
-    # Neu: Suchleiste für Schlagworte
-    search_term = st.text_input("🔍 Schlagwortsuche", placeholder="z. B. Schulschlüssel, blau, Turnhalle...")
+    st.subheader("Aktuelle Fundstücke & Anfragen")
 
-    col_f1, col_f2 = st.columns([1, 1])
-    with col_f1:
-        type_filter = st.selectbox("Filter nach Typ", ["Alle", "Verloren", "Gefunden"])
-    with col_f2:
+    # Filter- & Such-Leiste in 3 Spalten
+    c_search, c_type, c_cat = st.columns([2, 1, 1])
+    with c_search:
+        search_term = st.text_input("🔍 Suche", placeholder="Stichwort eingeben...")
+    with c_type:
+        type_filter = st.selectbox("Typ", ["Alle", "Verloren", "Gefunden"])
+    with c_cat:
         cat_filter = st.selectbox("Kategorie", ["Alle"] + LABELS)
 
     items = get_items(filter_type=type_filter, category=cat_filter, search_query=search_term.strip())
-    
-    if not items:
-        st.info("Keine passenden Einträge oder Anfragen vorhanden.")
-    else:
-        for item in items:
-            item_id = item[0]
-            title = item[1]
-            itype = item[2]
-            category = item[3]
-            location = item[4]
-            date_str = item[5]
-            desc = item[6]
-            status = item[7] if len(item) > 7 else "Offen"
-            img_path = item[8] if len(item) > 8 else None
-            user = item[9] if len(item) > 9 else "Anonym"
-            finder = item[10] if len(item) > 10 else "-"
-            
-            if status == "Gefunden / Gelöst":
-                badge_html = f'<span class="badge-resolved">GELÖST (Gefunden von {finder})</span>'
-            elif itype == "Gefunden":
-                badge_html = '<span class="badge-found">GEFUNDEN</span>'
-            else:
-                badge_html = '<span class="badge-lost">VERLUST-ANFRAGE</span>'
 
-            with st.container():
+    if not items:
+        st.info("Keine Einträge gefunden.")
+    else:
+        # Zwerdspaltiges Grid-Layout für Ergebnisse
+        col_grid1, col_grid2 = st.columns(2)
+        
+        for idx, item in enumerate(items):
+            item_id, title, itype, category, location, date_str, desc, status, img_path, user, finder = item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7] if len(item)>7 else "Offen", item[8] if len(item)>8 else None, item[9] if len(item)>9 else "Anonym", item[10] if len(item)>10 else "-"
+            
+            # Verteile Karten gleichmäßig auf 2 Spalten
+            target_col = col_grid1 if idx % 2 == 0 else col_grid2
+            
+            with target_col:
+                if status == "Gefunden / Gelöst":
+                    badge = f'<span class="status-badge badge-resolved">GELÖST von {finder}</span>'
+                elif itype == "Gefunden":
+                    badge = '<span class="status-badge badge-found">GEFUNDEN</span>'
+                else:
+                    badge = '<span class="status-badge badge-lost">VERLUST-ANFRAGE</span>'
+
                 st.markdown(f"""
-                <div class="item-card">
-                    {badge_html}
-                    <strong style="margin-left: 8px; font-size: 1.1rem;">{title}</strong>
-                    <p style="color: #64748B; margin: 6px 0 2px 0; font-size: 0.85rem;">
-                        📍 <b>Ort:</b> {location} | 📅 <b>Datum:</b> {date_str} | 🏷️ <b>Kategorie:</b> {category} | 👤 <b>Von:</b> {user}
-                    </p>
-                    <p style="margin-top: 6px; font-size: 0.95rem;">{desc if desc else 'Keine Beschreibung vorhanden.'}</p>
+                <div class="grid-card">
+                    {badge}
+                    <div class="card-title">{title}</div>
+                    <div class="card-meta">
+                        📍 <b>Ort:</b> {location}<br>
+                        📅 <b>Datum:</b> {date_str}<br>
+                        🏷️ <b>Kategorie:</b> {category}<br>
+                        👤 <b>Gemeldet von:</b> {user}
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.9rem;">{desc if desc else ''}</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
                 if img_path and os.path.exists(img_path):
-                    st.image(img_path, width=220)
+                    st.image(img_path, use_container_width=True)
 
                 if itype == "Verloren" and status == "Offen":
-                    col_act1, col_act2 = st.columns([2, 1])
-                    with col_act2:
-                        if st.button("🎉 Ich habe das gefunden!", key=f"found_btn_{item_id}", type="primary"):
-                            mark_as_found(item_id, st.session_state.username)
-                            st.success(f"Danke! Die Anfrage '{title}' wurde als gefunden markiert.")
-                            st.rerun()
-                st.markdown("---")
+                    if st.button("🎉 Ich habe es gefunden!", key=f"btn_{item_id}", type="primary"):
+                        mark_as_found(item_id, st.session_state.username)
+                        st.success("Erfolgreich als gefunden markiert!")
+                        st.rerun()
 
-# --- ANFRAGE / FUNDSTÜCK ERSTELLEN ---
 def view_add_item():
     render_header()
     
-    if st.button("← Zurück zum Dashboard"):
+    if st.button("← Zurück zur Übersicht"):
         st.session_state.active_view = "dashboard"
         st.rerun()
 
     is_lost = st.session_state.action_type == "Verloren"
-    action_title = "Verlustanfrage stellen" if is_lost else "Gefundenen Gegenstand melden"
-    st.title(action_title)
+    st.title("Verlust melden" if is_lost else "Fundstück eintragen")
 
     uploaded_image = None
     detected_category = "Sonstiges"
     saved_img_path = None
 
     if not is_lost:
-        st.subheader("1. Foto aufnehmen / hochladen (für KI-Erkennung)")
-        upload_method = st.radio("Foto-Quelle wählen:", ["Kamera-Scanner", "Datei-Upload"], horizontal=True)
-        if upload_method == "Kamera-Scanner":
-            uploaded_image = st.camera_input("Kamera zum Sache detektieren")
+        st.subheader("1. KI-Erkennung durch Foto")
+        upload_method = st.radio("Foto-Quelle:", ["Kamera", "Upload"], horizontal=True)
+        if upload_method == "Kamera":
+            uploaded_image = st.camera_input("Foto machen")
         else:
-            uploaded_image = st.file_uploader("Bild auswählen", type=["jpg", "jpeg", "png"])
+            uploaded_image = st.file_uploader("Datei wählen", type=["jpg", "jpeg", "png"])
     else:
-        st.info("💡 Wenn du ein Vergleichsfoto oder Beispielbild hast, kannst du es optional hochladen.")
-        uploaded_image = st.file_uploader("Foto hinzufügen (optional)", type=["jpg", "jpeg", "png"])
+        uploaded_image = st.file_uploader("Optionales Vergleichsfoto hochladen", type=["jpg", "jpeg", "png"])
 
     if uploaded_image:
         image = Image.open(uploaded_image).convert("RGB")
@@ -416,43 +462,26 @@ def view_add_item():
         saved_img_path = os.path.join("uploads", f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
         image.save(saved_img_path)
 
-    st.subheader("2. Details eingeben")
-    with st.form("add_item_form"):
-        title = st.text_input("Was wurde " + ("verloren?" if is_lost else "gefunden?"), 
-                              placeholder="z. B. Blauer Schulrucksack, Schlüsselbund mit rotem Band...")
-        
+    st.subheader("2. Details")
+    with st.form("add_form"):
+        title = st.text_input("Gegenstand / Bezeichnung", placeholder="z. B. Roter Turnbeutel")
         cat_index = LABELS.index(detected_category) if detected_category in LABELS else 0
         category = st.selectbox("Kategorie", LABELS, index=cat_index)
-        
-        location = st.text_input("Vermuteter Ort", placeholder="z. B. Sporthalle, Mensa, Raum 204")
+        location = st.text_input("Ort", placeholder="z. B. Pausenhof")
         date_val = st.date_input("Datum", datetime.date.today())
-        description = st.text_area("Beschreibung & Merkmale", 
-                                   placeholder="Genauere Beschreibung, damit Besitzer/Finder den Gegenstand zuordnen können.")
+        description = st.text_area("Weitere Hinweise")
 
-        button_text = "Verlustanfrage veröffentlichen" if is_lost else "Fundstück eintragen"
-        submit = st.form_submit_button(button_text, type="primary", use_container_width=True)
-
-        if submit:
+        if st.form_submit_button("Eintrag Speichern", type="primary", use_container_width=True):
             if not title or not location:
-                st.error("Bitte gib mindestens den Namen des Gegenstands und den Ort an.")
+                st.error("Bitte mindestens Name und Ort angeben.")
             else:
-                add_item(
-                    title=title,
-                    item_type=st.session_state.action_type,
-                    category=category,
-                    location=location,
-                    date_str=date_val.strftime("%d.%m.%Y"),
-                    description=description,
-                    image_path=saved_img_path,
-                    user_name=st.session_state.username
-                )
-                st.success("Erfolgreich eingetragen!")
+                add_item(title, st.session_state.action_type, category, location, date_val.strftime("%d.%m.%Y"), description, saved_img_path, st.session_state.username)
                 st.session_state.active_view = "dashboard"
                 st.rerun()
 
 
 # ==========================================
-# 6. HAUPT-ROUTER
+# 7. ROUTER
 # ==========================================
 def main():
     if not st.session_state.logged_in:
