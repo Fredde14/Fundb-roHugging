@@ -51,15 +51,22 @@ st.markdown(f"""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }}
 
+    /* Container für Header + Einstellungsbutton über die volle Breite */
+    .header-container {{
+        position: relative;
+        width: 100%;
+        margin-bottom: 24px;
+    }}
+
     .brand-header {{
         background-color: {navy_header};
         color: white;
-        padding: 20px;
+        padding: 22px 20px;
         border-radius: 12px;
         text-align: center;
-        margin-bottom: 20px;
         box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
         width: 100%;
+        box-sizing: border-box;
     }}
     .brand-header h1 {{
         margin: 0;
@@ -73,6 +80,14 @@ st.markdown(f"""
         color: #93C5FD;
         text-transform: uppercase;
         letter-spacing: 1.5px;
+    }}
+
+    /* Positionierung des Popover-Buttons ganz nach rechts oben */
+    .header-settings-btn {{
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 100;
     }}
 
     /* Entfernt den störenden weißen Formular-Rahmen/Balken komplett */
@@ -284,20 +299,21 @@ def predict_category(image: Image.Image):
 
 
 # ==========================================
-# 4. HEADER COMPONENT MIT EINSTELLUNGEN
+# 4. HEADER COMPONENT MIT SEYMETRISCHER AUSRICHTUNG
 # ==========================================
 def render_header():
-    col_header, col_settings = st.columns([5, 1])
+    # Volle Breite für das Banner + Einstellungs-Button rechts
+    c_banner, c_opt = st.columns([12, 1])
     
-    with col_header:
+    with c_banner:
         st.markdown("""
         <div class="brand-header">
             <p>Katharineum zu Lübeck</p>
             <h1>DIGITALES FUNDBÜRO</h1>
         </div>
         """, unsafe_allow_html=True)
-
-    with col_settings:
+        
+    with c_opt:
         with st.popover("⚙️"):
             st.markdown("### Einstellungen")
             dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
@@ -322,22 +338,7 @@ def view_login():
     
     with center_col:
         # Header
-        st.markdown("""
-        <div class="brand-header">
-            <p>Katharineum zu Lübeck</p>
-            <h1>DIGITALES FUNDBÜRO</h1>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Einstellungen-Button
-        c_space, c_opt = st.columns([4, 1])
-        with c_opt:
-            with st.popover("⚙️"):
-                st.markdown("### Einstellungen")
-                dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
-                if dark_mode_active != st.session_state.dark_mode:
-                    st.session_state.dark_mode = dark_mode_active
-                    st.rerun()
+        render_header()
 
         # Nahtlose Anmeldekarte ohne weiße Formular-Überlagerung
         st.markdown("<div class='login-container'>", unsafe_allow_html=True)
