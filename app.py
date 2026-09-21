@@ -51,12 +51,10 @@ st.markdown(f"""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }}
 
-    /* Labels für Eingabefelder und Selectboxen gut lesbar machen */
     .stApp label, .stApp label p, div[data-testid="stMarkdownContainer"] p {{
         color: {text_color} !important;
     }}
 
-    /* Haupt-Header nimmt exakt 100% der Content-Breite ein */
     .brand-header {{
         background-color: {navy_header} !important;
         color: white !important;
@@ -75,7 +73,6 @@ st.markdown(f"""
         color: #FFFFFF !important;
     }}
     
-    /* "KATHARINEUM ZU LÜBECK" garantiert strahlend weiß machen */
     .brand-header p,
     .brand-header span,
     div.brand-header p {{
@@ -86,7 +83,6 @@ st.markdown(f"""
         letter-spacing: 1.5px;
     }}
 
-    /* Standard-Buttons (Secondary) mit weißem Hintergrund: Schrift schwarz erzwingen */
     div.stButton > button:not([kind="primary"]),
     div.stButton > button:not([kind="primary"]) *,
     div.stButton > button:not([kind="primary"]) p,
@@ -102,7 +98,6 @@ st.markdown(f"""
         color: #000000 !important;
     }}
 
-    /* Primäre Buttons behalten das Navy-Design mit weißer Schrift */
     div.stButton > button[kind="primary"],
     div.stButton > button[kind="primary"] *,
     div.stButton > button[kind="primary"] p,
@@ -111,7 +106,6 @@ st.markdown(f"""
         color: #FFFFFF !important;
     }}
 
-    /* Entfernt den weißen Formular-Rahmen */
     div[data-testid="stForm"] {{
         border: none !important;
         padding: 0 !important;
@@ -224,6 +218,17 @@ def mark_as_found(item_id, finder_name):
     conn.commit()
     conn.close()
 
+def mark_as_claimed(item_id, owner_name):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        UPDATE items
+        SET status = 'Zurückgegeben', finder_name = ?
+        WHERE id = ?
+    ''', (f"Eigentümer: {owner_name}", item_id))
+    conn.commit()
+    conn.close()
+
 def get_items(filter_type=None, category=None, search_query=None):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -329,7 +334,6 @@ def render_header():
                     st.session_state.logged_in = False
                     st.rerun()
 
-    # Header mit Schul-Icon (🏫) vor der Überschrift
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
@@ -422,8 +426,8 @@ def view_dashboard():
             user = item[9] if len(item) > 9 else "Anonym"
             finder = item[10] if len(item) > 10 else "-"
             
-            if status == "Gefunden / Gelöst":
-                badge_html = f'<span class="badge-resolved">GELÖST (Gefunden von {finder})</span>'
+            if status in ["Gefunden / Gelöst", "Zurückgegeben"]:
+                badge_html = f'<span class="badge-resolved">GELÖST ({finder})</span>'
             elif itype == "Gefunden":
                 badge_html = '<span class="badge-found">GEFUNDEN</span>'
             else:
@@ -435,7 +439,7 @@ def view_dashboard():
                     {badge_html}
                     <strong style="margin-left: 8px; font-size: 1.1rem;">{title}</strong>
                     <p style="color: {subtext_color}; margin: 6px 0 2px 0; font-size: 0.85rem;">
-                        📍 <b>Ort:</b> {location} | 📅 <b>Datum:</b> {date_str} | 🏷️ <b>Kategorie:</b> {category} | 👤 <b>Von:</b> {user}
+                        📍 <b>Ort:</b> {location} | 📅 <b>Datum:</b> {date_str} | 🏷️ <b>Kategorie:</b> {category} | 👤 <b>Gemeldet von:</b> {user}
                     </p>
                     <p style="margin-top: 6px; font-size: 0.95rem;">{desc if desc else 'Keine Beschreibung vorhanden.'}</p>
                 </div>
@@ -444,6 +448,7 @@ def view_dashboard():
                 if img_path and os.path.exists(img_path):
                     st.image(img_path, width=220)
 
+                # Option A: Bei VERLORENEN Sachen ("Ich habe das gefunden!")
                 if itype == "Verloren" and status == "Offen":
                     col_act1, col_act2 = st.columns([2, 1])
                     with col_act2:
@@ -451,6 +456,26 @@ def view_dashboard():
                             mark_as_found(item_id, st.session_state.username)
                             st.success(f"Danke! Die Anfrage '{title}' wurde als gefunden markiert.")
                             st.rerun()
+
+                # Option B: Bei GEFUNDENEN Sachen ("Das gehört mir!")
+                if itype == "Gefunden" and status == "Offen":
+                    col_act1, col_act2 = st.columns([2, 1])
+                    with col_act2:
+                        with st.popover("🙋 Das gehört mir!"):
+                            st.markdown("### 🙋‍♂️ Ist das dein Gegenstand?")
+                            st.write("""
+                            **So bekommst du dein Fundstück zurück:**
+                            1. **Fundort / Aufbewahrung:** Das Fundstück befindet sich im Sekretariat oder bei der meldenden Person (**{}**).
+                            2. **Nachweis:** Um Verwechslungen zu vermeiden, beschreibe vor Ort genaue Merkmale (z.B. Inhalt, Kratzer, Sperrcode).
+                            """.format(user))
+                            
+                            st.markdown("---")
+                            st.write("Hast du den Gegenstand bereits abgeholt?")
+                            if st.button("✅ Gegenstand als abgeholt markieren", key=f"claim_btn_{item_id}", type="primary", use_container_width=True):
+                                mark_as_claimed(item_id, st.session_state.username)
+                                st.success("Vielen Dank! Der Eintrag wurde als zurückgegeben markiert.")
+                                st.rerun()
+
                 st.markdown("---")
 
 # --- ANFRAGE / FUNDSTÜCK ERSTELLEN ---
