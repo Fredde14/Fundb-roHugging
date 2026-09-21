@@ -77,12 +77,15 @@ st.markdown(f"""
         letter-spacing: 1.5px;
     }}
 
-    /* CSS-Positionierung für den Einstellungs-Button rechts über dem Banner */
-    .header-bar {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+    /* Standard-Buttons (Secondary) haben immer schwarze Schrift */
+    div.stButton > button:not([kind="primary"]) {{
+        color: #000000 !important;
+    }}
+
+    /* Primäre Buttons behalten weiße Schrift */
+    div.stButton > button[kind="primary"] {{
+        background-color: {navy_header};
+        color: #FFFFFF !important;
     }}
 
     /* Entfernt den weißen Formular-Rahmen */
@@ -137,11 +140,6 @@ st.markdown(f"""
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
-    }}
-
-    div.stButton > button[kind="primary"] {{
-        background-color: {navy_header};
-        color: white;
     }}
 
     #MainMenu {{visibility: hidden;}}
@@ -297,7 +295,6 @@ def predict_category(image: Image.Image):
 # 4. HEADER COMPONENT MIT EINSTELLUNGEN
 # ==========================================
 def render_header():
-    # Zeile oberhalb des Banners für den Einstellungs-Button (rechtsbündig)
     col_spacer, col_btn = st.columns([8, 1])
     with col_btn:
         with st.popover("⚙️ Einstellungen"):
@@ -313,7 +310,6 @@ def render_header():
                     st.session_state.logged_in = False
                     st.rerun()
 
-    # Blaue Banner-Box in voller Breite
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
@@ -380,7 +376,6 @@ def view_dashboard():
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Übersicht & Suche")
     
-    # Schlagwortsuche
     search_term = st.text_input("🔍 Schlagwortsuche", placeholder="z. B. Schulschlüssel, blau, Turnhalle...")
 
     col_f1, col_f2 = st.columns([1, 1])
