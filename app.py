@@ -59,6 +59,7 @@ st.markdown(f"""
         text-align: center;
         margin-bottom: 24px;
         box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+        width: 100%;
     }}
     .brand-header h1 {{
         margin: 0;
@@ -72,6 +73,15 @@ st.markdown(f"""
         color: #93C5FD;
         text-transform: uppercase;
         letter-spacing: 1.5px;
+    }}
+
+    .login-container {{
+        background-color: {card_bg};
+        border: 1px solid {border_color};
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-top: 10px;
     }}
 
     .item-card {{
@@ -268,7 +278,7 @@ def predict_category(image: Image.Image):
 # ==========================================
 # 4. HEADER COMPONENT MIT EINSTELLUNGEN
 # ==========================================
-def render_header():
+def render_header(show_settings=True):
     col_header, col_settings = st.columns([5, 1])
     
     with col_header:
@@ -280,18 +290,19 @@ def render_header():
         """, unsafe_allow_html=True)
 
     with col_settings:
-        with st.popover("⚙️"):
-            st.markdown("### Einstellungen")
-            dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
-            if dark_mode_active != st.session_state.dark_mode:
-                st.session_state.dark_mode = dark_mode_active
-                st.rerun()
-
-            if st.session_state.logged_in:
-                st.markdown("---")
-                if st.button("Abmelden", key="logout_settings_btn", use_container_width=True):
-                    st.session_state.logged_in = False
+        if show_settings:
+            with st.popover("⚙️"):
+                st.markdown("### Einstellungen")
+                dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
+                if dark_mode_active != st.session_state.dark_mode:
+                    st.session_state.dark_mode = dark_mode_active
                     st.rerun()
+
+                if st.session_state.logged_in:
+                    st.markdown("---")
+                    if st.button("Abmelden", key="logout_settings_btn", use_container_width=True):
+                        st.session_state.logged_in = False
+                        st.rerun()
 
 
 # ==========================================
@@ -300,14 +311,37 @@ def render_header():
 
 # --- LOGIN SCREEN ---
 def view_login():
-    render_header()
-    col1, col2, col3 = st.columns([1, 8, 1])
-    with col2:
-        st.markdown("<h3 style='text-align: center;'>Anmeldung</h3>", unsafe_allow_html=True)
+    # Zentrierter Container für Login und Header
+    _, center_col, _ = st.columns([1, 4, 1])
+    
+    with center_col:
+        # Header innerhalb der zentrierten Spalte
+        st.markdown("""
+        <div class="brand-header">
+            <p>Katharineum zu Lübeck</p>
+            <h1>DIGITALES FUNDBÜRO</h1>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Einstellungen-Button für den Login-Screen direkt über der Box
+        c_space, c_opt = st.columns([4, 1])
+        with c_opt:
+            with st.popover("⚙️"):
+                st.markdown("### Einstellungen")
+                dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
+                if dark_mode_active != st.session_state.dark_mode:
+                    st.session_state.dark_mode = dark_mode_active
+                    st.rerun()
+
+        # Saubere, zentrierte Anmeldebox direkt darunter
+        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; margin-bottom: 20px;'>Anmeldung</h3>", unsafe_allow_html=True)
+        
         with st.form("login_form"):
             user_input = st.text_input("Anmeldename", placeholder="z. B. s.müller")
             password_input = st.text_input("Passwort", type="password", placeholder="••••••••")
             submit = st.form_submit_button("Anmelden", use_container_width=True, type="primary")
+            
             if submit:
                 if user_input and password_input:
                     st.session_state.logged_in = True
@@ -315,11 +349,14 @@ def view_login():
                     st.rerun()
                 else:
                     st.error("Bitte gib Anmeldename und Passwort ein.")
+                    
         c1, c2 = st.columns(2)
         with c1:
             st.caption("[Anmeldename vergessen?](#)")
         with c2:
             st.caption("[Passwort vergessen?](#)")
+            
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # --- DASHBOARD ---
 def view_dashboard():
