@@ -99,11 +99,12 @@ st.markdown("""
 
 
 # ==========================================
-# 2. DATENBANK LOGIK & AUTOMATISCHE MIGRATION
+# 2. DATENBANK LOGIK & MIGRATION
 # ==========================================
 DB_FILE = "fundbuero.db"
 
 def init_db():
+    """Initialisiert die SQLite-Datenbank und führt Migrationen durch."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
@@ -122,6 +123,7 @@ def init_db():
         )
     ''')
     
+    # Automatische Spalten-Migration für bestehende Datenbanken
     c.execute("PRAGMA table_info(items)")
     columns = [col[1] for col in c.fetchall()]
     if "finder_name" not in columns:
@@ -174,7 +176,7 @@ init_db()
 
 
 # ==========================================
-# 3. HUGGING FACE KI INFERENZ & MAPPER
+# 3. HUGGING FACE KI INFERENZ & TRANSLATOR
 # ==========================================
 LABELS = ["Bekleidung/Jacke", "Elektronik/Handy", "Schlüssel", "Rucksack/Tasche", "Mäppchen/Stifte", "Sonstiges"]
 
@@ -182,49 +184,58 @@ LABELS = ["Bekleidung/Jacke", "Elektronik/Handy", "Schlüssel", "Rucksack/Tasche
 def load_hf_model():
     """Lädt ein vortrainiertes Hugging Face Bildklassifikations-Modell."""
     try:
-        # Nutzung eines leichten, vortrainierten Vision-Modells von Hugging Face
         classifier = pipeline("image-classification", model="google/vit-base-patch16-224")
         return classifier
     except Exception as e:
         st.warning(f"Hugging Face Modell konnte nicht geladen werden: {e}")
         return None
 
-def map_hf_to_school_category(hf_label: str) -> str:
-    """Mappt englische Hugging Face Objektbezeichnungen auf die Schul-Kategorien."""
+def map_hf_to_school_category(hf_label: str):
+    """Mappt englische Hugging Face Labels auf deutsche Schulkategorien + deutsche Bezeichnung."""
     label = hf_label.lower()
     
-    if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "shoe", "clothing", "hoodie", "cap"]):
-        return "Bekleidung/Jacke"
-    elif any(w in label for w in ["cellular telephone", "mobile phone", "laptop", "tablet", "ipod", "electronic"]):
-        return "Elektronik/Handy"
+    # Rückgabe: (Deutsche Kategorie, Deutsche Bezeichnung)
+    if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "clothing", "hoodie", "cardigan", "jean", "jersey"]):
+        return "Bekleidung/Jacke", "Kleidungsstück / Jacke"
+    elif any(w in label for w in ["cellular telephone", "mobile phone", "cellphone"]):
+        return "Elektronik/Handy", "Smartphone / Handy"
+    elif any(w in label for w in ["laptop", "notebook"]):
+        return "Elektronik/Handy", "Laptop / Computer"
+    elif any(w in label for w in ["tablet", "ipad"]):
+        return "Elektronik/Handy", "Tablet"
     elif any(w in label for w in ["key", "keychain"]):
-        return "Schlüssel"
-    elif any(w in label for w in ["backpack", "bag", "handbag", "suitcase", "pouch"]):
-        return "Rucksack/Tasche"
-    elif any(w in label for w in ["pencil", "pen", "pencil box", "pencil case", "eraser"]):
-        return "Mäppchen/Stifte"
+        return "Schlüssel", "Schlüssel"
+    elif any(w in label for w in ["backpack", "bag", "handbag", "suitcase", "pouch", "school bag", "knapsack"]):
+        return "Rucksack/Tasche", "Rucksack / Tasche"
+    elif any(w in label for w in ["pencil", "pen", "pencil box", "pencil case", "eraser", "ballpoint"]):
+        return "Mäppchen/Stifte", "Mäppchen / Stift"
+    elif "water bottle" in label or "flask" in label or "pop bottle" in label:
+        return "Sonstiges", "Trinkflasche"
+    elif "umbrella" in label:
+        return "Sonstiges", "Regenschirm"
+    elif "wallet" in label or "purse" in label:
+        return "Sonstiges", "Geldbörse"
     else:
-        return "Sonstiges"
+        return "Sonstiges", "Gegenstand"
 
 def predict_category(image: Image.Image):
     classifier = load_hf_model()
     
     if classifier is not None:
         try:
-            # Hugging Face Pipeline Inferenz ausführen
             results = classifier(image)
             top_prediction = results[0]
             
             raw_label = top_prediction['label']
             confidence = float(top_prediction['score'])
             
-            # Zuordnung zur Schulkategorie
-            mapped_category = map_hf_to_school_category(raw_label)
-            return mapped_category, confidence, raw_label
+            # Übersetzung & Kategorie-Mapping auf Deutsch
+            mapped_category, german_label = map_hf_to_school_category(raw_label)
+            return mapped_category, confidence, german_label
         except Exception:
             pass
 
-    return "Sonstiges", 0.75, "Unknown"
+    return "Sonstiges", 0.75, "Gegenstand"
 
 
 # ==========================================
@@ -317,6 +328,7 @@ def view_dashboard():
         st.info("Keine passenden Einträge oder Anfragen vorhanden.")
     else:
         for item in items:
+            # Sicheres Entpacken
             item_id = item[0]
             title = item[1]
             itype = item[2]
@@ -389,8 +401,10 @@ def view_add_item():
 
     if uploaded_image:
         image = Image.open(uploaded_image).convert("RGB")
-        detected_category, confidence_score, raw_label = predict_category(image)
-        st.success(f"🤗 **Hugging Face KI:** Erkannt als *'{raw_label}'* ({confidence_score*100:.1f}%) $\rightarrow$ Zugeordnet zu **{detected_category}**")
+        detected_category, confidence_score, german_label = predict_category(image)
+        
+        # Ausgabe nur noch auf Deutsch:
+        st.success(f"🤗 **KI-Erkennung:** Erkannt als **{german_label}** ({confidence_score*100:.1f}%) $\rightarrow$ Kategorie **{detected_category}**")
         
         os.makedirs("uploads", exist_ok=True)
         saved_img_path = os.path.join("uploads", f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
