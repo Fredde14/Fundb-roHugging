@@ -35,6 +35,8 @@ if st.session_state.dark_mode:
     border_color = "#334155"
     subtext_color = "#94A3B8"
     navy_header = "#1E3A8A"
+    input_bg = "#334155"
+    input_text = "#FFFFFF"
 else:
     bg_color = "#F8FAFC"
     card_bg = "#FFFFFF"
@@ -42,6 +44,8 @@ else:
     border_color = "#E2E8F0"
     subtext_color = "#64748B"
     navy_header = "#1E3A8A"
+    input_bg = "#FFFFFF"
+    input_text = "#1E293B"
 
 st.markdown(f"""
 <style>
@@ -51,10 +55,21 @@ st.markdown(f"""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }}
 
+    /* Globale Textfarben-Anpassung für Dark Mode */
+    p, span, label, h1, h2, h3, h4, h5, h6, div {{
+        color: {text_color} !important;
+    }}
+
+    /* Eingabefelder im Dark/Light Mode lesbar machen */
+    input, textarea, select {{
+        background-color: {input_bg} !important;
+        color: {input_text} !important;
+        border-color: {border_color} !important;
+    }}
+
     /* Haupt-Header nimmt exakt 100% der Content-Breite ein */
     .brand-header {{
         background-color: {navy_header};
-        color: white;
         padding: 22px 20px;
         border-radius: 12px;
         text-align: center;
@@ -72,17 +87,9 @@ st.markdown(f"""
     .brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #93C5FD;
+        color: #93C5FD !important;
         text-transform: uppercase;
         letter-spacing: 1.5px;
-    }}
-
-    /* CSS-Positionierung für den Einstellungs-Button rechts über dem Banner */
-    .header-bar {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
     }}
 
     /* Entfernt den weißen Formular-Rahmen */
@@ -109,14 +116,10 @@ st.markdown(f"""
         padding: 16px;
         margin-bottom: 12px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        color: {text_color};
-    }}
-    .item-card strong {{
-        color: {text_color};
     }}
     .badge-found {{
         background-color: #DEF7EC;
-        color: #03543F;
+        color: #03543F !important;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -124,7 +127,7 @@ st.markdown(f"""
     }}
     .badge-lost {{
         background-color: #FDE8E8;
-        color: #9B1C1C;
+        color: #9B1C1C !important;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -132,7 +135,7 @@ st.markdown(f"""
     }}
     .badge-resolved {{
         background-color: #E0E7FF;
-        color: #3730A3;
+        color: #3730A3 !important;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -141,7 +144,7 @@ st.markdown(f"""
 
     div.stButton > button[kind="primary"] {{
         background-color: {navy_header};
-        color: white;
+        color: white !important;
     }}
 
     #MainMenu {{visibility: hidden;}}
@@ -297,10 +300,10 @@ def predict_category(image: Image.Image):
 # 4. HEADER COMPONENT MIT EINSTELLUNGEN
 # ==========================================
 def render_header():
-    # Zeile oberhalb des Banners für den Einstellungs-Button (rechtsbündig)
-    col_spacer, col_btn = st.columns([8, 1])
+    # Ausreichend Platz für den Einstellungs-Button, damit er voll sichtbar ist
+    col_spacer, col_btn = st.columns([4, 1])
     with col_btn:
-        with st.popover("⚙️ Einstellungen"):
+        with st.popover("⚙️ Einstellungen", use_container_width=True):
             st.markdown("### Einstellungen")
             dark_mode_active = st.checkbox("🌙 Dark Mode aktivieren", value=st.session_state.dark_mode)
             if dark_mode_active != st.session_state.dark_mode:
@@ -313,7 +316,7 @@ def render_header():
                     st.session_state.logged_in = False
                     st.rerun()
 
-    # Blaue Banner-Box in voller Breite
+    # Blaue Banner-Box
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
