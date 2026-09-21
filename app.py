@@ -31,7 +31,7 @@ if "dark_mode" not in st.session_state:
 if st.session_state.dark_mode:
     bg_color = "#0F172A"
     card_bg = "#1E293B"
-    text_color = "#F8FAFC"
+    text_color = "#FFFFFF"  # Weiß im Dark Mode für optimale Lesbarkeit
     border_color = "#334155"
     subtext_color = "#94A3B8"
     navy_header = "#1E3A8A"
@@ -49,6 +49,11 @@ st.markdown(f"""
         background-color: {bg_color};
         color: {text_color};
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }}
+
+    /* Labels für Eingabefelder und Selectboxen gut lesbar machen */
+    .stApp label, .stApp label p, div[data-testid="stMarkdownContainer"] p {{
+        color: {text_color} !important;
     }}
 
     /* Haupt-Header nimmt exakt 100% der Content-Breite ein */
@@ -72,7 +77,7 @@ st.markdown(f"""
     .brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #93C5FD;
+        color: #93C5FD !important;
         text-transform: uppercase;
         letter-spacing: 1.5px;
     }}
