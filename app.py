@@ -153,7 +153,8 @@ def mark_as_found(item_id, finder_name):
     conn.commit()
     conn.close()
 
-def get_items(filter_type=None, category=None):
+def get_items(filter_type=None, category=None, search_query=None):
+    """Lädt Einträge aus der Datenbank unter Berücksichtigung von Typ, Kategorie und Suchbegriffen."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     query = "SELECT * FROM items WHERE 1=1"
@@ -165,6 +166,12 @@ def get_items(filter_type=None, category=None):
     if category and category != "Alle":
         query += " AND category = ?"
         params.append(category)
+        
+    # Schlagwortsuche (sucht in Titel, Beschreibung, Ort und Name)
+    if search_query:
+        query += " AND (title LIKE ? OR description LIKE ? OR location LIKE ? OR user_name LIKE ?)"
+        wildcard_query = f"%{search_query}%"
+        params.extend([wildcard_query, wildcard_query, wildcard_query, wildcard_query])
         
     query += " ORDER BY id DESC"
     c.execute(query, params)
@@ -194,7 +201,6 @@ def map_hf_to_school_category(hf_label: str):
     """Mappt englische Hugging Face Labels auf deutsche Schulkategorien + deutsche Bezeichnung."""
     label = hf_label.lower()
     
-    # Rückgabe: (Deutsche Kategorie, Deutsche Bezeichnung)
     if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "clothing", "hoodie", "cardigan", "jean", "jersey"]):
         return "Bekleidung/Jacke", "Kleidungsstück / Jacke"
     elif any(w in label for w in ["cellular telephone", "mobile phone", "cellphone"]):
@@ -229,7 +235,6 @@ def predict_category(image: Image.Image):
             raw_label = top_prediction['label']
             confidence = float(top_prediction['score'])
             
-            # Übersetzung & Kategorie-Mapping auf Deutsch
             mapped_category, german_label = map_hf_to_school_category(raw_label)
             return mapped_category, confidence, german_label
         except Exception:
@@ -314,21 +319,23 @@ def view_dashboard():
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Übersicht & Anfragen")
+    st.subheader("Übersicht & Suche")
     
+    # Neu: Suchleiste für Schlagworte
+    search_term = st.text_input("🔍 Schlagwortsuche", placeholder="z. B. Schulschlüssel, blau, Turnhalle...")
+
     col_f1, col_f2 = st.columns([1, 1])
     with col_f1:
         type_filter = st.selectbox("Filter nach Typ", ["Alle", "Verloren", "Gefunden"])
     with col_f2:
         cat_filter = st.selectbox("Kategorie", ["Alle"] + LABELS)
 
-    items = get_items(filter_type=type_filter, category=cat_filter)
+    items = get_items(filter_type=type_filter, category=cat_filter, search_query=search_term.strip())
     
     if not items:
         st.info("Keine passenden Einträge oder Anfragen vorhanden.")
     else:
         for item in items:
-            # Sicheres Entpacken
             item_id = item[0]
             title = item[1]
             itype = item[2]
@@ -403,7 +410,6 @@ def view_add_item():
         image = Image.open(uploaded_image).convert("RGB")
         detected_category, confidence_score, german_label = predict_category(image)
         
-        # Ausgabe nur noch auf Deutsch:
         st.success(f"🤗 **KI-Erkennung:** Erkannt als **{german_label}** ({confidence_score*100:.1f}%) $\rightarrow$ Kategorie **{detected_category}**")
         
         os.makedirs("uploads", exist_ok=True)
