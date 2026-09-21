@@ -57,7 +57,7 @@ st.markdown(f"""
         padding: 20px;
         border-radius: 12px;
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
         width: 100%;
     }}
@@ -75,11 +75,19 @@ st.markdown(f"""
         letter-spacing: 1.5px;
     }}
 
+    /* Entfernt den störenden weißen Formular-Rahmen/Balken komplett */
+    div[data-testid="stForm"] {{
+        border: none !important;
+        padding: 0 !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }}
+
     .login-container {{
         background-color: {card_bg};
         border: 1px solid {border_color};
         border-radius: 12px;
-        padding: 24px;
+        padding: 28px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         margin-top: 10px;
     }}
@@ -278,7 +286,7 @@ def predict_category(image: Image.Image):
 # ==========================================
 # 4. HEADER COMPONENT MIT EINSTELLUNGEN
 # ==========================================
-def render_header(show_settings=True):
+def render_header():
     col_header, col_settings = st.columns([5, 1])
     
     with col_header:
@@ -290,19 +298,18 @@ def render_header(show_settings=True):
         """, unsafe_allow_html=True)
 
     with col_settings:
-        if show_settings:
-            with st.popover("⚙️"):
-                st.markdown("### Einstellungen")
-                dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
-                if dark_mode_active != st.session_state.dark_mode:
-                    st.session_state.dark_mode = dark_mode_active
-                    st.rerun()
+        with st.popover("⚙️"):
+            st.markdown("### Einstellungen")
+            dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
+            if dark_mode_active != st.session_state.dark_mode:
+                st.session_state.dark_mode = dark_mode_active
+                st.rerun()
 
-                if st.session_state.logged_in:
-                    st.markdown("---")
-                    if st.button("Abmelden", key="logout_settings_btn", use_container_width=True):
-                        st.session_state.logged_in = False
-                        st.rerun()
+            if st.session_state.logged_in:
+                st.markdown("---")
+                if st.button("Abmelden", key="logout_settings_btn", use_container_width=True):
+                    st.session_state.logged_in = False
+                    st.rerun()
 
 
 # ==========================================
@@ -311,11 +318,10 @@ def render_header(show_settings=True):
 
 # --- LOGIN SCREEN ---
 def view_login():
-    # Zentrierter Container für Login und Header
     _, center_col, _ = st.columns([1, 4, 1])
     
     with center_col:
-        # Header innerhalb der zentrierten Spalte
+        # Header
         st.markdown("""
         <div class="brand-header">
             <p>Katharineum zu Lübeck</p>
@@ -323,7 +329,7 @@ def view_login():
         </div>
         """, unsafe_allow_html=True)
         
-        # Einstellungen-Button für den Login-Screen direkt über der Box
+        # Einstellungen-Button
         c_space, c_opt = st.columns([4, 1])
         with c_opt:
             with st.popover("⚙️"):
@@ -333,7 +339,7 @@ def view_login():
                     st.session_state.dark_mode = dark_mode_active
                     st.rerun()
 
-        # Saubere, zentrierte Anmeldebox direkt darunter
+        # Nahtlose Anmeldekarte ohne weiße Formular-Überlagerung
         st.markdown("<div class='login-container'>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center; margin-bottom: 20px;'>Anmeldung</h3>", unsafe_allow_html=True)
         
