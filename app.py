@@ -58,8 +58,8 @@ st.markdown(f"""
 
     /* Haupt-Header nimmt exakt 100% der Content-Breite ein */
     .brand-header {{
-        background-color: {navy_header};
-        color: white;
+        background-color: {navy_header} !important;
+        color: white !important;
         padding: 22px 20px;
         border-radius: 12px;
         text-align: center;
@@ -74,10 +74,11 @@ st.markdown(f"""
         font-weight: 700;
         color: #FFFFFF !important;
     }}
-    .brand-header p {{
+    /* "KATHARINEUM ZU LÜBECK" wird hier strikt weiß erzwungen */
+    .brand-header p, .brand-header p span {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #FFFFFF !important; /* "Katharineum zu Lübeck" immer in Weiß */
+        color: #FFFFFF !important;
         text-transform: uppercase;
         letter-spacing: 1.5px;
     }}
