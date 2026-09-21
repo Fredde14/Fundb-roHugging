@@ -77,24 +77,32 @@ st.markdown(f"""
     .brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #FFFFFF !important; /* "Katharineum zu Lübeck" immer in Weiß für beste Lesbarkeit */
+        color: #FFFFFF !important; /* "Katharineum zu Lübeck" immer in Weiß */
         text-transform: uppercase;
         letter-spacing: 1.5px;
     }}
 
-    /* Standard-Buttons (Secondary) mit hellem/weißem Hintergrund bekommen immer dunkle Schrift */
-    div.stButton > button:not([kind="primary"]) {{
+    /* Standard-Buttons (Secondary) mit weißem Hintergrund: Schrift schwarz erzwingen */
+    div.stButton > button:not([kind="primary"]),
+    div.stButton > button:not([kind="primary"]) *,
+    div.stButton > button:not([kind="primary"]) p,
+    div.stButton > button:not([kind="primary"]) span {{
         background-color: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #CBD5E1 !important;
+        color: #000000 !important;
+        border-color: #CBD5E1 !important;
     }}
-    div.stButton > button:not([kind="primary"]):hover {{
+    
+    div.stButton > button:not([kind="primary"]):hover,
+    div.stButton > button:not([kind="primary"]):hover * {{
         background-color: #F1F5F9 !important;
-        color: #0F172A !important;
+        color: #000000 !important;
     }}
 
     /* Primäre Buttons behalten das Navy-Design mit weißer Schrift */
-    div.stButton > button[kind="primary"] {{
+    div.stButton > button[kind="primary"],
+    div.stButton > button[kind="primary"] *,
+    div.stButton > button[kind="primary"] p,
+    div.stButton > button[kind="primary"] span {{
         background-color: {navy_header} !important;
         color: #FFFFFF !important;
     }}
