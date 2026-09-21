@@ -24,52 +24,27 @@ if "active_view" not in st.session_state:
     st.session_state.active_view = "dashboard"
 if "action_type" not in st.session_state:
     st.session_state.action_type = "Gefunden"
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
 
-# Dynamic CSS Injection (Light vs. Dark Mode)
-if st.session_state.dark_mode:
-    bg_color = "#0F172A"
-    card_bg = "#1E293B"
-    text_color = "#F8FAFC"
-    border_color = "#334155"
-    subtext_color = "#94A3B8"
-    navy_header = "#1E3A8A"
-    input_bg = "#334155"
-    input_text = "#FFFFFF"
-else:
-    bg_color = "#F8FAFC"
-    card_bg = "#FFFFFF"
-    text_color = "#1E293B"
-    border_color = "#E2E8F0"
-    subtext_color = "#64748B"
-    navy_header = "#1E3A8A"
-    input_bg = "#FFFFFF"
-    input_text = "#1E293B"
+# CSS Styling für das Redesign (Modern UI)
+NAVY_HEADER = "#1E3A8A"
+LIGHT_BG = "#F8FAFC"
+CARD_BG = "#FFFFFF"
+TEXT_COLOR = "#1E293B"
+BORDER_COLOR = "#E2E8F0"
+SUBTEXT_COLOR = "#64748B"
 
 st.markdown(f"""
 <style>
     .stApp {{
-        background-color: {bg_color};
-        color: {text_color};
+        background-color: {LIGHT_BG};
+        color: {TEXT_COLOR};
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }}
-
-    /* Globale Textfarben-Anpassung für Dark Mode */
-    p, span, label, h1, h2, h3, h4, h5, h6, div {{
-        color: {text_color} !important;
-    }}
-
-    /* Eingabefelder im Dark/Light Mode lesbar machen */
-    input, textarea, select {{
-        background-color: {input_bg} !important;
-        color: {input_text} !important;
-        border-color: {border_color} !important;
     }}
 
     /* Haupt-Header nimmt exakt 100% der Content-Breite ein */
     .brand-header {{
-        background-color: {navy_header};
+        background-color: {NAVY_HEADER};
+        color: white;
         padding: 22px 20px;
         border-radius: 12px;
         text-align: center;
@@ -87,7 +62,7 @@ st.markdown(f"""
     .brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #93C5FD !important;
+        color: #93C5FD;
         text-transform: uppercase;
         letter-spacing: 1.5px;
     }}
@@ -101,8 +76,8 @@ st.markdown(f"""
     }}
 
     .login-container {{
-        background-color: {card_bg};
-        border: 1px solid {border_color};
+        background-color: {CARD_BG};
+        border: 1px solid {BORDER_COLOR};
         border-radius: 12px;
         padding: 28px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -110,8 +85,8 @@ st.markdown(f"""
     }}
 
     .item-card {{
-        background-color: {card_bg};
-        border: 1px solid {border_color};
+        background-color: {CARD_BG};
+        border: 1px solid {BORDER_COLOR};
         border-radius: 10px;
         padding: 16px;
         margin-bottom: 12px;
@@ -119,7 +94,7 @@ st.markdown(f"""
     }}
     .badge-found {{
         background-color: #DEF7EC;
-        color: #03543F !important;
+        color: #03543F;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -127,7 +102,7 @@ st.markdown(f"""
     }}
     .badge-lost {{
         background-color: #FDE8E8;
-        color: #9B1C1C !important;
+        color: #9B1C1C;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -135,7 +110,7 @@ st.markdown(f"""
     }}
     .badge-resolved {{
         background-color: #E0E7FF;
-        color: #3730A3 !important;
+        color: #3730A3;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -143,8 +118,8 @@ st.markdown(f"""
     }}
 
     div.stButton > button[kind="primary"] {{
-        background-color: {navy_header};
-        color: white !important;
+        background-color: {NAVY_HEADER};
+        color: white;
     }}
 
     #MainMenu {{visibility: hidden;}}
@@ -297,26 +272,9 @@ def predict_category(image: Image.Image):
 
 
 # ==========================================
-# 4. HEADER COMPONENT MIT EINSTELLUNGEN
+# 4. HEADER COMPONENT
 # ==========================================
 def render_header():
-    # Ausreichend Platz für den Einstellungs-Button, damit er voll sichtbar ist
-    col_spacer, col_btn = st.columns([4, 1])
-    with col_btn:
-        with st.popover("⚙️ Einstellungen", use_container_width=True):
-            st.markdown("### Einstellungen")
-            dark_mode_active = st.checkbox("🌙 Dark Mode aktivieren", value=st.session_state.dark_mode)
-            if dark_mode_active != st.session_state.dark_mode:
-                st.session_state.dark_mode = dark_mode_active
-                st.rerun()
-
-            if st.session_state.logged_in:
-                st.markdown("---")
-                if st.button("🚪 Abmelden", key="logout_settings_btn", use_container_width=True):
-                    st.session_state.logged_in = False
-                    st.rerun()
-
-    # Blaue Banner-Box
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
@@ -364,7 +322,14 @@ def view_login():
 def view_dashboard():
     render_header()
     
-    st.write(f"Angemeldet als: **{st.session_state.username}**")
+    col_user, col_logout = st.columns([4, 1])
+    with col_user:
+        st.write(f"Angemeldet als: **{st.session_state.username}**")
+    with col_logout:
+        if st.button("Abmelden", use_container_width=True):
+            st.session_state.logged_in = False
+            st.rerun()
+            
     st.markdown("---")
 
     col_lost, col_found = st.columns(2)
@@ -422,7 +387,7 @@ def view_dashboard():
                 <div class="item-card">
                     {badge_html}
                     <strong style="margin-left: 8px; font-size: 1.1rem;">{title}</strong>
-                    <p style="color: {subtext_color}; margin: 6px 0 2px 0; font-size: 0.85rem;">
+                    <p style="color: {SUBTEXT_COLOR}; margin: 6px 0 2px 0; font-size: 0.85rem;">
                         📍 <b>Ort:</b> {location} | 📅 <b>Datum:</b> {date_str} | 🏷️ <b>Kategorie:</b> {category} | 👤 <b>Von:</b> {user}
                     </p>
                     <p style="margin-top: 6px; font-size: 0.95rem;">{desc if desc else 'Keine Beschreibung vorhanden.'}</p>
