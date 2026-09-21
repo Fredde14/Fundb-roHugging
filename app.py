@@ -31,7 +31,7 @@ if "dark_mode" not in st.session_state:
 if st.session_state.dark_mode:
     bg_color = "#0F172A"
     card_bg = "#1E293B"
-    text_color = "#FFFFFF"  # Weiß im Dark Mode für optimale Lesbarkeit
+    text_color = "#FFFFFF"
     border_color = "#334155"
     subtext_color = "#94A3B8"
     navy_header = "#1E3A8A"
@@ -177,7 +177,6 @@ st.markdown(f"""
 DB_FILE = "fundbuero.db"
 
 def init_db():
-    """Initialisiert die SQLite-Datenbank und führt Migrationen durch."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
@@ -226,7 +225,6 @@ def mark_as_found(item_id, finder_name):
     conn.close()
 
 def get_items(filter_type=None, category=None, search_query=None):
-    """Lädt Einträge aus der Datenbank unter Berücksichtigung von Typ, Kategorie und Suchbegriffen."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     query = "SELECT * FROM items WHERE 1=1"
@@ -260,7 +258,6 @@ LABELS = ["Bekleidung/Jacke", "Elektronik/Handy", "Schlüssel", "Rucksack/Tasche
 
 @st.cache_resource
 def load_hf_model():
-    """Lädt ein vortrainiertes Hugging Face Bildklassifikations-Modell."""
     try:
         classifier = pipeline("image-classification", model="google/vit-base-patch16-224")
         return classifier
@@ -269,7 +266,6 @@ def load_hf_model():
         return None
 
 def map_hf_to_school_category(hf_label: str):
-    """Mappt englische Hugging Face Labels auf deutsche Schulkategorien + deutsche Bezeichnung."""
     label = hf_label.lower()
     
     if any(w in label for w in ["jacket", "coat", "sweater", "shirt", "clothing", "hoodie", "cardigan", "jean", "jersey"]):
@@ -333,10 +329,11 @@ def render_header():
                     st.session_state.logged_in = False
                     st.rerun()
 
+    # Header mit Schul-Icon (🏫) vor der Überschrift
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
-        <h1>DIGITALES FUNDBÜRO</h1>
+        <h1>🏫 DIGITALES FUNDBÜRO</h1>
     </div>
     """, unsafe_allow_html=True)
 
