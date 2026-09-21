@@ -77,19 +77,25 @@ st.markdown(f"""
     .brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
-        color: #93C5FD !important;
+        color: #FFFFFF !important; /* "Katharineum zu Lübeck" immer in Weiß für beste Lesbarkeit */
         text-transform: uppercase;
         letter-spacing: 1.5px;
     }}
 
-    /* Standard-Buttons (Secondary) haben immer schwarze Schrift */
+    /* Standard-Buttons (Secondary) mit hellem/weißem Hintergrund bekommen immer dunkle Schrift */
     div.stButton > button:not([kind="primary"]) {{
-        color: #000000 !important;
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #CBD5E1 !important;
+    }}
+    div.stButton > button:not([kind="primary"]):hover {{
+        background-color: #F1F5F9 !important;
+        color: #0F172A !important;
     }}
 
-    /* Primäre Buttons behalten weiße Schrift */
+    /* Primäre Buttons behalten das Navy-Design mit weißer Schrift */
     div.stButton > button[kind="primary"] {{
-        background-color: {navy_header};
+        background-color: {navy_header} !important;
         color: #FFFFFF !important;
     }}
 
