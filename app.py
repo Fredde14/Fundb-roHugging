@@ -74,8 +74,11 @@ st.markdown(f"""
         font-weight: 700;
         color: #FFFFFF !important;
     }}
-    /* "KATHARINEUM ZU LÜBECK" wird hier strikt weiß erzwungen */
-    .brand-header p, .brand-header p span {{
+    
+    /* "KATHARINEUM ZU LÜBECK" garantiert strahlend weiß machen */
+    .brand-header p,
+    .brand-header span,
+    div.brand-header p {{
         margin: 4px 0 0 0;
         font-size: 0.85rem;
         color: #FFFFFF !important;
