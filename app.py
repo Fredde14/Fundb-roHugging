@@ -77,12 +77,12 @@ st.markdown(f"""
         letter-spacing: 1.5px;
     }}
 
-    /* CSS-Trick: Platziert das Streamlit Popover (⚙️) oben rechts über den Header */
-    div[data-testid="stPopover"] {{
-        position: absolute;
-        right: 0px;
-        top: 10px;
-        z-index: 999;
+    /* CSS-Positionierung für den Einstellungs-Button rechts über dem Banner */
+    .header-bar {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
     }}
 
     /* Entfernt den weißen Formular-Rahmen */
@@ -294,30 +294,32 @@ def predict_category(image: Image.Image):
 
 
 # ==========================================
-# 4. HEADER COMPONENT (PERFEKT BÜNDIG)
+# 4. HEADER COMPONENT MIT EINSTELLUNGEN
 # ==========================================
 def render_header():
-    # Banner über die volle Breite für eine exakte Fluchtlinie
+    # Zeile oberhalb des Banners für den Einstellungs-Button (rechtsbündig)
+    col_spacer, col_btn = st.columns([8, 1])
+    with col_btn:
+        with st.popover("⚙️ Einstellungen"):
+            st.markdown("### Einstellungen")
+            dark_mode_active = st.checkbox("🌙 Dark Mode aktivieren", value=st.session_state.dark_mode)
+            if dark_mode_active != st.session_state.dark_mode:
+                st.session_state.dark_mode = dark_mode_active
+                st.rerun()
+
+            if st.session_state.logged_in:
+                st.markdown("---")
+                if st.button("🚪 Abmelden", key="logout_settings_btn", use_container_width=True):
+                    st.session_state.logged_in = False
+                    st.rerun()
+
+    # Blaue Banner-Box in voller Breite
     st.markdown("""
     <div class="brand-header">
         <p>Katharineum zu Lübeck</p>
         <h1>DIGITALES FUNDBÜRO</h1>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Der Button liegt per CSS genau rechts oben
-    with st.popover("⚙️"):
-        st.markdown("### Einstellungen")
-        dark_mode_active = st.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
-        if dark_mode_active != st.session_state.dark_mode:
-            st.session_state.dark_mode = dark_mode_active
-            st.rerun()
-
-        if st.session_state.logged_in:
-            st.markdown("---")
-            if st.button("Abmelden", key="logout_settings_btn", use_container_width=True):
-                st.session_state.logged_in = False
-                st.rerun()
 
 
 # ==========================================
